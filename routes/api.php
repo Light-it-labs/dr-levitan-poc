@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Lightit\Backoffice\ConversationItems\App\Controllers\StoreConversationItemController;
 use Lightit\Backoffice\Users\App\Controllers\DeleteUserController;
 use Lightit\Backoffice\Users\App\Controllers\GetUserController;
 use Lightit\Backoffice\Users\App\Controllers\ListUserController;
@@ -34,4 +35,15 @@ Route::prefix('users')
         Route::get('/{user}', GetUserController::class)->withTrashed();
         Route::post('/', StoreUserController::class);
         Route::delete('/{user}', DeleteUserController::class);
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Webhooks Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('webhooks')
+    ->middleware([])
+    ->group(static function () {
+        Route::post('/conversation-item', StoreConversationItemController::class);
     });
