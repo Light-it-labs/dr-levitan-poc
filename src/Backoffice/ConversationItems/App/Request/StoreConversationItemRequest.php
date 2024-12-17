@@ -21,6 +21,8 @@ class StoreConversationItemRequest extends FormRequest
 
     public const TEXT = 'data.object.text';
 
+    public const APP_URL = 'data.object.appURL';
+
     public const AUTHOR_DISPLAY_NAME = 'data.object.author.displayName';
 
     public const CREATED_AT = 'data.object.createdAt';
@@ -43,6 +45,7 @@ class StoreConversationItemRequest extends FormRequest
             self::DATA => ['required', 'array'],
             self::DATA_OBJECT => ['required', 'array'],
             self::TEXT => ['nullable', 'string'],
+            self::APP_URL => ['required', 'string'],
             self::AUTHOR_DISPLAY_NAME => ['nullable', 'string'],
             self::CREATED_AT => ['required', 'date'],
             self::ID => ['required', 'string'],
@@ -57,6 +60,7 @@ class StoreConversationItemRequest extends FormRequest
             eventTime: $this->string(self::EVENT_TIME)->toString(),
             type: $this->string(self::TYPE)->toString(),
             text: is_string($this->input(self::TEXT)) ? $this->string(self::TEXT)->toString() : '',
+            appURL: is_string($this->input(self::APP_URL)) ? $this->string(self::APP_URL)->toString() : '',
             authorDisplayName: is_string($this->input(self::AUTHOR_DISPLAY_NAME)) ? $this->string(
                 self::AUTHOR_DISPLAY_NAME
             )->toString() : '',
