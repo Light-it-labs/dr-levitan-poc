@@ -10,6 +10,7 @@ class ConversationItemDto
         public string $eventTime,
         public string $type,
         public string|null $text,
+        public string $appURL,
         public string|null $authorDisplayName,
         public string $createdAt,
         public string $id,
