@@ -7,15 +7,30 @@ namespace Lightit\Backoffice\ConversationItems\Domain\Actions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Lightit\Backoffice\ConversationItems\Domain\DataTransferObjects\ConversationItemDto;
+use Lightit\Shared\App\Services\MessagesCacheService;
+use OpenAI;
 
 class StoreConversationItemAction
 {
+    public function __construct(
+        private readonly MessagesCacheService $messagesCacheService,
+    ) {
+    }
+
     public function execute(ConversationItemDto $conversationItemDto): ConversationItemDto
     {
+        $this->messagesCacheService->storeConversationItem($conversationItemDto);
+
         if ($conversationItemDto->direction === 'inbound') {
             $taskId = $this->createTask($conversationItemDto);
 
-            $this->replyMessageAutomatically($conversationItemDto->conversationId, $taskId);
+            $conversationHistory = $this->messagesCacheService->getConversation($conversationItemDto->conversationId);
+
+            $prompt = $this->generatePrompt($conversationHistory, $conversationItemDto->text);
+
+            $aiResponse = $this->generateAIResponse($conversationItemDto->text);
+
+            $this->replyMessageAutomatically($conversationItemDto->conversationId, $aiResponse, null);
         }
 
         return $conversationItemDto;
@@ -57,17 +72,15 @@ class StoreConversationItemAction
         return null;
     }
 
-    private function replyMessageAutomatically(string $conversationId, string|null $taskId): void
+    private function replyMessageAutomatically(string $conversationId, string $message, string|null $taskId): void
     {
-        $message = 'This will be an AI-generated response.';
-
         if ($taskId) {
             $taskUrl = config('clickup.app_url') . $taskId;
             $message .= "\nA task has been generated linked to this conversation. To view it, click here: $taskUrl";
         }
 
         $payload = [
-            'internal' => true,
+            // 'internal' => true,
             'body' => [
                 [
                     'type' => 'text',
@@ -92,5 +105,55 @@ class StoreConversationItemAction
                 'error' => $response->body(),
             ]);
         }
+    }
+
+    /**
+     * Generate a prompt array for OpenAI based on conversation history and a new message.
+     *
+     * @param ConversationItemDto[] $conversationHistory Array of conversation history items
+     * @param string                $newMessage          The new message from the user
+     *
+     * @return array The formatted array of messages for OpenAI
+     */
+    private function generatePrompt(array $conversationHistory, string $newMessage): array
+    {
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'You are a virtual medical assistant. Respond in a professional and empathetic manner. '
+                    . 'If the user requests an appointment, provide three random available time slots for them to choose from, '
+                    . 'ensuring the times are within business hours (e.g., 9:00 AM to 5:00 PM).',
+            ],
+        ];
+
+        foreach ($conversationHistory as $item) {
+            $role = $item->direction === 'inbound' ? 'user' : 'assistant';
+            $messages[] = [
+                'role' => $role,
+                'content' => $item->text,
+            ];
+        }
+
+        $messages[] = [
+            'role' => 'user',
+            'content' => $newMessage,
+        ];
+
+        return $messages;
+    }
+
+    private function generateAIResponse(string $message): string
+    {
+        $client = OpenAI::client(config('openai.api_key'));
+
+        $response = $client->chat()->create([
+            'model' => 'gpt-4',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a virtual medical assistant. Respond in a professional and empathetic manner.  the user requests an appointment, provide three random available time slots for them to choose from, ensuring the times are within business hours (e.g., 9:00 AM to 5:00 PM).'],
+                ['role' => 'user', 'content' => $message],
+            ],
+        ]);
+
+        return $response['choices'][0]['message']['content'] ?? 'Sorry, I cannot respond at the moment.';
     }
 }
