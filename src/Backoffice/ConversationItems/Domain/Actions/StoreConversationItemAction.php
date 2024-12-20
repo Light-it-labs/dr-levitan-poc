@@ -22,13 +22,15 @@ class StoreConversationItemAction
         $this->messagesCacheService->storeConversationItem($conversationItemDto);
 
         if ($conversationItemDto->direction === 'inbound') {
-            $taskId = $this->createTask($conversationItemDto);
+            // $taskId = $this->createTask($conversationItemDto);
 
             $conversationHistory = $this->messagesCacheService->getConversation($conversationItemDto->conversationId);
 
             $prompt = $this->generatePrompt($conversationHistory, $conversationItemDto->text);
 
-            $aiResponse = $this->generateAIResponse($conversationItemDto->text);
+            Log::info('Prompt', ['promptContent' => $prompt]);
+
+            $aiResponse = $this->generateAIResponse($conversationItemDto->text, $prompt);
 
             $this->replyMessageAutomatically($conversationItemDto->conversationId, $aiResponse, null);
         }
@@ -142,16 +144,13 @@ class StoreConversationItemAction
         return $messages;
     }
 
-    private function generateAIResponse(string $message): string
+    private function generateAIResponse(string $message, array $prompt): string
     {
         $client = OpenAI::client(config('openai.api_key'));
 
         $response = $client->chat()->create([
             'model' => 'gpt-4',
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a virtual medical assistant. Respond in a professional and empathetic manner.  the user requests an appointment, provide three random available time slots for them to choose from, ensuring the times are within business hours (e.g., 9:00 AM to 5:00 PM).'],
-                ['role' => 'user', 'content' => $message],
-            ],
+            'messages' => $prompt,
         ]);
 
         return $response['choices'][0]['message']['content'] ?? 'Sorry, I cannot respond at the moment.';
