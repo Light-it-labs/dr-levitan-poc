@@ -9,9 +9,13 @@ use Lightit\Backoffice\ConversationItems\Domain\DataTransferObjects\Conversation
 
 class MessagesCacheService
 {
-    public function storeConversationItem(ConversationItemDto $item)
+    public function storeConversationItem(ConversationItemDto $item): void
     {
         $conversationId = $item->conversationId;
+
+        /**
+         * @var ConversationItemDto[] $conversation
+         */
         $conversation = Cache::get("conversation_{$conversationId}", []);
 
         $conversation[] = $item;

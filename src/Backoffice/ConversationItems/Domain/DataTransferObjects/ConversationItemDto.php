@@ -9,7 +9,7 @@ class ConversationItemDto
     public function __construct(
         public string $eventTime,
         public string $type,
-        public string|null $text,
+        public string $text,
         public string $appURL,
         public string|null $authorDisplayName,
         public string $createdAt,

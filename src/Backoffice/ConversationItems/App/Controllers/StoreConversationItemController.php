@@ -15,6 +15,7 @@ class StoreConversationItemController
         StoreConversationItemRequest $conversationItemRequest,
         StoreConversationItemAction $storeConversationItemAction,
     ): JsonResponse {
+        Log::info('New request from Spruce', ['request' => $conversationItemRequest]);
         $conversationItem = $storeConversationItemAction->execute($conversationItemRequest->toDto());
 
         Log::info('Conversation item created', ['conversation_item' => $conversationItem]);
