@@ -169,24 +169,15 @@ class StoreConversationItemAction
         $messages = [
             [
                 'role' => 'system',
-                'content' => 'You are a virtual medical assistant. Respond in a professional and empathetic manner. '
-                    . 'If the user requests an appointment or changes an existing appointment, you must provide three random available time slots for them to choose from. '
-                    . 'These time slots should be within business hours (e.g., 9:00 AM to 5:00 PM) and clearly presented. '
-                    . 'Make sure to give the user the ability to select one of these options. After they select a time, let them know the appointment will be scheduled. '
-                    . 'If the user provides a preference (e.g., morning or afternoon), try to accommodate that preference in the available options. '
-                    . 'When responding, always return only one JSON object with the following fields:'
-                    . ' 1. A "message" field with the content that will be sent back to the user.'
-                    . ' 2. A "task" field (which is an object) that must be created in case of clinical inquiries or task-related requests.'
-                    . ' The "task" should contain a title, description, and category. For clinical inquiries, use the category "Talk to Victor" to indicate that it needs doctor review.'
-                    . ' In cases where a task is returned, do not provide too much information, but simply indicate that it will be referred to the doctor for follow-up.'
-                    . ' If the user’s request does not require a task (i.e., non-clinical, appointment requests, or non-task related), the "task" should be null.'
-                    . ' The response must contain ONLY this JSON object with no additional text or explanations.'
-                    . ' IMPORTANT: The "task" should never be embedded inside the "message" field, nor should it be included as {"task": null} inside the message. The "task" must always be separate from the "message".'
-                    . ' Example 1 (when no task is required, e.g., appointment scheduling):'
-                    . ' { "message": "Here are three available time slots for your lab appointment: 1. Monday, 9:00 AM 2. Monday, 1:00 PM 3. Tuesday, 11:00 AM. Please let me know which slot works for you.", "task": null }'
-                    . ' Example 2 (when a task is required, e.g., clinical inquiry):'
-                    . ' { "message": "Thank you for your inquiry. Your request is being reviewed by our team and we will get back to you shortly.", "task": { "title": "Review patient symptoms", "description": "Patient reports symptoms that need doctor review", "category": "Talk to Victor" } }'
-                    . ' Do not include any additional text, explanations, or any other information outside of the JSON object.',
+                'content' => 'You are a virtual medical assistant. Respond professionally and empathetically. '
+                    . 'When a user requests or changes an appointment, provide three randomly available time slots within business hours (9:00 AM to 5:00 PM) for them to choose from. '
+                    . 'Ensure the time slots are clearly presented, and allow the user to select one. After the selection, confirm that the appointment will be scheduled. '
+                    . 'For task-related requests, keep the message brief and simply mention that the issue will be referred to the doctor for follow-up.'
+                    . ' Tasks should be returned only in the following cases:'
+                    . ' - When the patient asks a medical question, return a task with the category "Talk to Victor".'
+                    . ' - When a user expresses interest in enrolling for a service, return a task with the category "Enrollment".'
+                    . ' - When a user confirms an appointment time, return a task with the category "Send confirmation".'
+                    . ' For any other type of inquiry, the response to the patient should be returned in the message field, and the task field should be returned as null.',
             ],
         ];
 
@@ -223,8 +214,37 @@ class StoreConversationItemAction
         $client = OpenAI::client($apiKey);
 
         $response = $client->chat()->create([
-            'model' => 'gpt-4',
+            'model' => 'gpt-4o-mini',
             'messages' => $prompt,
+            'response_format' => [
+                'type' => 'json_schema',
+                'json_schema' => [
+                    'name' => 'medical_assistant_response',
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'message' => [
+                                'type' => 'string',
+                                'description' => 'The message content to be sent to the user.',
+                            ],
+                            'task' => [
+                                'type' => 'object',
+                                'description' => 'An object representing the task that may need to be created. If no task is needed, this field will be null.',
+                                'properties' => [
+                                    'title' => ['type' => 'string'],
+                                    'description' => ['type' => 'string'],
+                                    'category' => ['type' => 'string'],
+                                ],
+                                'required' => ['title', 'description', 'category'],
+                                'additionalProperties' => false,
+                            ],
+                        ],
+                        'required' => ['message', 'task'],
+                        'additionalProperties' => false,
+                    ],
+                    'strict' => true,
+                ],
+            ],
         ]);
 
         $content = $response['choices'][0]['message']['content'] ?? null;

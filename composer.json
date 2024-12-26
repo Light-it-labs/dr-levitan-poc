@@ -17,6 +17,7 @@
     "laravel/tinker": "^2.9",
     "openai-php/client": "^0.10.3",
     "sentry/sentry-laravel": "^4.4",
+    "spatie/laravel-google-calendar": "^3.8",
     "spatie/laravel-query-builder": "^6.0"
   },
   "require-dev": {

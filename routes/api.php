@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Lightit\Backoffice\Calendar\App\Controllers\ListEventsController;
 use Lightit\Backoffice\ConversationItems\App\Controllers\StoreConversationItemController;
 use Lightit\Backoffice\Users\App\Controllers\DeleteUserController;
 use Lightit\Backoffice\Users\App\Controllers\GetUserController;
@@ -47,3 +48,15 @@ Route::prefix('webhooks')
     ->group(static function () {
         Route::post('/conversation-item', StoreConversationItemController::class);
     });
+
+/*
+|--------------------------------------------------------------------------
+| Google Calendar Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('calendar')
+    ->middleware([])
+    ->group(static function () {
+        Route::get('/events', ListEventsController::class);
+    });
+
