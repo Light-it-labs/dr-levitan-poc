@@ -2,7 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lightit\Backoffice\Calendar\App\Controllers\ListEventsController;
+use Lightit\Backoffice\Calendar\App\Controllers\BookAppointmentController;
+use Lightit\Backoffice\Calendar\App\Controllers\ListAvailabilityController;
 use Lightit\Backoffice\ConversationItems\App\Controllers\StoreConversationItemController;
 use Lightit\Backoffice\Users\App\Controllers\DeleteUserController;
 use Lightit\Backoffice\Users\App\Controllers\GetUserController;
@@ -30,7 +31,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 |--------------------------------------------------------------------------
 */
 Route::prefix('users')
-    ->middleware([])
     ->group(static function () {
         Route::get('/', ListUserController::class);
         Route::get('/{user}', GetUserController::class)->withTrashed();
@@ -44,7 +44,6 @@ Route::prefix('users')
 |--------------------------------------------------------------------------
 */
 Route::prefix('webhooks')
-    ->middleware([])
     ->group(static function () {
         Route::post('/conversation-item', StoreConversationItemController::class);
     });
@@ -55,8 +54,8 @@ Route::prefix('webhooks')
 |--------------------------------------------------------------------------
 */
 Route::prefix('calendar')
-    ->middleware([])
     ->group(static function () {
-        Route::get('/events', ListEventsController::class);
+        Route::get('/availability', ListAvailabilityController::class);
+        Route::post('/book-appointment', BookAppointmentController::class);
     });
 

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Lightit\Backoffice\Calendar\App\Transformers;
 
 use Flugg\Responder\Transformers\Transformer;
-use Lightit\Backoffice\Calendar\Domain\DataTransferObjects\EventDto;
+use Spatie\GoogleCalendar\Event;
 
 class EventTransformer extends Transformer
 {
-    public function transform(EventDto $event): array
+    public function transform(Event $event): array
     {
         return [
             // @phpstan-ignore-next-line
