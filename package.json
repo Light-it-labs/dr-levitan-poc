@@ -87,7 +87,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.13.0",
     "husky": "^9.1.7",
-    "knip": "^5.39.4",
+    "knip": "^5.42.2",
     "laravel-vite-plugin": "^1.1.1",
     "lint-staged": "^15.2.11",
     "plop": "^4.0.1",
